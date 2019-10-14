@@ -1,8 +1,10 @@
 #! /usr/bin/env node
 
 const ASANA_ACCESS_TOKEN = "";
-const DEBUG = false;
+const DEBUG = "verbose";
+const ERROR_MESSAGING = false;
 const FORCE_CREATE_LOCAL = false;
+const LOCALE = "de";
 
 const os = require('os');
 var fs = require('fs-extra');
@@ -87,6 +89,11 @@ function updateLocalTask(task) {
 function getLocalTaskData(id, callback, secondTry) {
 	if (DEBUG == "verbose") console.log("Getting local task data: " + id);
 	applescript.execFile(__dirname + "/applescripts/getTaskData.scpt", [id], function (error, data, body) {
+		if(!data){
+			if (DEBUG == "verbose") console.log(" - - Skipping task with id " + id + ", no local data availiable");
+			if (ERROR_MESSAGING == true) console.log(" - - - " + error.message);
+			return false;
+		}
 		try {
 			var parsedData = JSON.parse(data);
 		} catch (error) {
@@ -103,11 +110,10 @@ function getLocalTaskData(id, callback, secondTry) {
 			if (DEBUG == "verbose") console.log("Second try success for task ID " + id);
 		}
 
-		var df = "dddd, MMMM D, YYYY [at] h:mm:ss A";
-
-		parsedData.due_on = (parsedData.due_on.length > 0 && parsedData.due_on != "missing value" ? moment(parsedData.due_on, df) : null);
-		parsedData.created = (parsedData.created.length > 0 && parsedData.created != "missing value" ? moment(parsedData.created, df) : null);
-		parsedData.modified = (parsedData.modified.length > 0 && parsedData.modified != "missing value" ? moment(parsedData.modified, df) : null);
+		var df = "dddd, D. MMMM YYYY [um] HH:mm:ss";
+		parsedData.due_on = (parsedData.due_on.length > 0 && parsedData.due_on != "missing value" ? moment(parsedData.due_on, df, LOCALE) : null);
+		parsedData.created = (parsedData.created.length > 0 && parsedData.created != "missing value" ? moment(parsedData.created, df, LOCALE) : null);
+		parsedData.modified = (parsedData.modified.length > 0 && parsedData.modified != "missing value" ? moment(parsedData.modified, df, LOCALE) : null);
 
 		callback(parsedData);
 	});

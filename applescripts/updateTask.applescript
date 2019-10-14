@@ -38,75 +38,29 @@ on run argv
 	end if
 	
 	tell O
-		set foundContext to 0
-		try
-			set theContext to findContext("Asana")
-			set foundContext to 1
-		end try
-		
-		if (foundContext is 0) then
-			set pendingTasks to allTasks()
-		else
-			set pendingTasks to every task of theContext whose completed is false
+		set theTask to first flattened task of default document where its id is taskId
+
+		if (taskName is not "-") then
+			set name of theTask to taskName
 		end if
 		
-		repeat with theTask in pendingTasks
-			if (id of theTask = taskId) then
-				
-				if (taskName is not "-") then
-					set name of theTask to taskName
-				end if
-				
-				log (taskCompleted)
-				if (taskCompleted is not "-") then
-					set completed of theTask to taskCompleted
-				end if
-				
-				if (dueDate is not "-") then
-					set due date of theTask to convertedDueDate
-				end if
-				
-				if (notes is not "-") then
-					set note of theTask to notes
-				end if
-				
-				return true
-				
-				exit repeat
+
+		if (taskCompleted is not "-") then
+			if taskCompleted is true then
+				mark complete theTask
+			else
+				mark incomplete theTask
 			end if
-		end repeat
-		
-		-- may have been completed recently
-		if (foundContext is 0) then
-			set completedTasks to every flattened task of default document whose completed is true
-		else
-			set completedTasks to every task of theContext whose completed is true
 		end if
 		
-		repeat with theTask in completedTasks
-			if (id of theTask = taskId) then
-				
-				if (taskName is not "-") then
-					set name of theTask to taskName
-				end if
-				
-				log (taskCompleted)
-				if (taskCompleted is not "-") then
-					set completed of theTask to taskCompleted
-				end if
-				
-				if (dueDate is not "-") then
-					set due date of theTask to convertedDueDate
-				end if
-				
-				if (notes is not "-") then
-					set note of theTask to notes
-				end if
-				
-				return true
-				
-				exit repeat
-			end if
-		end repeat
+		if (dueDate is not "-") then
+			set due date of theTask to convertedDueDate
+		end if
+		
+		if (notes is not "-") then
+			set note of theTask to notes
+		end if
+		
+		return true
 	end tell
 end run

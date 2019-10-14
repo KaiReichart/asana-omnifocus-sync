@@ -34,58 +34,48 @@ on run argv
 	end if
 	
 	tell O
-		set foundContext to 0
+
+	-- CREATE ASANA TAG IF NOT EXISTS
+		set foundTag to 0
 		try
-			set theContext to findContext("Asana")
-			set foundContext to 1
-		end try
-		
-		if (foundContext is 0) then
 			tell default document
-				set theContext to make new context with properties {name:"Asana"}
-				set foundContext to 1
+				set theTag to the first flattened tag where its name = "Asana"
+				set foundTag to 1
+			end tell
+		end try
+		if (foundTag is 0) then
+			tell default document
+				set theTag to make new tag with properties {name:"Asana"}
+				set foundTag to 1
 			end tell
 		end if
-	end tell
-	
-	tell default document
-		set theTask to make new inbox task with properties {name:taskName}
-	end tell
-	
-	tell O
-		try
-			if (foundContext is 0) then
-				setContext(theTask, "Asana")
-			else
-				setContext(theTask, theContext)
+
+	-- CREATE PROJECT IF NOT EXISTS
+		set foundProject to 0
+		if (projectName is not "-") then
+			try
+				tell default document
+					set theProject to the first flattened project where its name = projectName
+					set foundProject to 1
+				end tell
+			end try
+			if (foundProject is 0) then
+				tell default document
+					set theProject to make new project with properties {name:projectName}
+					set foundProject to 1
+				end tell
 			end if
-		end try
-		
-		try
-			if (sectionName is not "-") then
-				set projectSet to 0
-				try
-					set theProject to findProjectContains(sectionName)
-					set projectSet to 1
-				end try
-				
-				if (projectSet is 0) then
-					if (projectName is not "-") then
-						set theProject to findProjectContains(projectName)
-					end if
-				end if
-			else
-				if (projectName is not "-") then
-					set theProject to findProjectContains(projectName)
-				end if
+			
+		end if
+
+
+		tell default document
+			set theTask to make new inbox task with properties {name:taskName, primary tag: theTag}
+			if (foundProject is 1) then
+				move theTask to end of tasks of theProject
 			end if
-		end try
-		
-		try
-			if (isProject(theProject)) then
-				setContainer(theTask, theProject)
-			end if
-		end try
+		end tell
+
 		
 		if (dueDate is not "-") then
 			set due date of theTask to convertedDueDate
